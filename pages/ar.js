@@ -117,7 +117,7 @@ export default function ARExperience() {
         
         {/* Preload AR libraries */}
         <link rel="preload" href="https://unpkg.com/three@0.158.0/build/three.min.js" as="script" />
-        <link rel="preload" href="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js" as="script" />
+        <link rel="preload" href="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js" as="script" />
         
         {/* Portuguese AR Fonts */}
         <link rel="stylesheet" href="/fonts/portuguese-ar.css" />

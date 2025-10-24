@@ -25,7 +25,9 @@ const ARScene = ({
     running: false,
     markerVisible: false,
     error: null,
-    performance: null
+    performance: null,
+    loadingLibraries: false,
+    loadingStatus: ''
   });
 
   const [vampireMessage, setVampireMessage] = useState(null);
@@ -68,19 +70,28 @@ const ARScene = ({
         console.log('Three.js loaded successfully');
       }
 
-      // Load MindAR
+      // Load MindAR - using the correct CDN path
       if (!window.MINDAR?.IMAGE?.MindARThree) {
         console.log('Loading MindAR...');
-        await loadScript('https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js');
         
-        // Wait for MINDAR to be available
-        await waitForGlobal('MINDAR', 5000);
-        
-        // Verify MINDAR.IMAGE is available
-        if (!window.MINDAR?.IMAGE?.MindARThree) {
-          throw new Error('MindAR IMAGE module not available');
+        // Try the main CDN source with longer timeout
+        try {
+          await loadScript('https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js');
+          
+          // Wait longer for MINDAR to be available (15 seconds)
+          await waitForGlobal('MINDAR', 15000);
+          
+          // Verify MINDAR.IMAGE is available
+          if (!window.MINDAR?.IMAGE?.MindARThree) {
+            console.error('MINDAR object structure:', window.MINDAR);
+            throw new Error('MindAR IMAGE.MindARThree module not available after loading');
+          }
+          
+          console.log('MindAR loaded successfully');
+        } catch (error) {
+          console.error('Failed to load MindAR:', error);
+          throw new Error(`MindAR failed to load: ${error.message}. Please check your internet connection and try again.`);
         }
-        console.log('MindAR loaded successfully');
       }
 
       return { MINDAR: window.MINDAR, THREE: window.THREE };
@@ -119,14 +130,21 @@ const ARScene = ({
   const waitForGlobal = (globalName, timeout = 5000) => {
     return new Promise((resolve, reject) => {
       const startTime = Date.now();
+      let attempts = 0;
       
       const checkGlobal = () => {
+        attempts++;
+        const elapsed = Date.now() - startTime;
+        
         if (window[globalName]) {
+          console.log(`${globalName} available after ${elapsed}ms (${attempts} attempts)`);
           resolve(window[globalName]);
-        } else if (Date.now() - startTime > timeout) {
-          reject(new Error(`Timeout waiting for ${globalName}`));
+        } else if (elapsed > timeout) {
+          reject(new Error(`Timeout waiting for ${globalName} after ${elapsed}ms (${attempts} attempts)`));
         } else {
-          setTimeout(checkGlobal, 100);
+          // Check more frequently at first, then slow down
+          const delay = attempts < 10 ? 50 : 200;
+          setTimeout(checkGlobal, delay);
         }
       };
       
@@ -251,6 +269,8 @@ const ARScene = ({
   const initializeMindAR = useCallback(async () => {
     try {
       console.log('Starting MindAR initialization...');
+      setArState(prev => ({ ...prev, loadingLibraries: true, loadingStatus: 'Carregando bibliotecas AR...' }));
+      
       const { MINDAR, THREE } = await loadLibraries();
       
       // Verify libraries are properly loaded
@@ -263,6 +283,8 @@ const ARScene = ({
       }
       
       console.log('AR libraries verified successfully');
+      
+      setArState(prev => ({ ...prev, loadingStatus: 'Preparando marcador AR...' }));
       
       // Create QR code marker image
       const markerImage = await createQRMarkerImage();
@@ -282,6 +304,8 @@ const ARScene = ({
         width: containerRect.width,
         height: containerRect.height
       });
+      
+      setArState(prev => ({ ...prev, loadingStatus: 'Inicializando sistema AR...' }));
       
       // Initialize MindAR with proper configuration
       // Note: MindAR will handle its own camera stream internally
@@ -360,9 +384,12 @@ const ARScene = ({
         }
       };
       
+      setArState(prev => ({ ...prev, loadingLibraries: false, loadingStatus: '' }));
+      
       return mindar;
     } catch (error) {
       console.error('Failed to initialize MindAR:', error);
+      setArState(prev => ({ ...prev, loadingLibraries: false, loadingStatus: '' }));
       throw error;
     }
   }, [loadLibraries, createARContent, onMarkerFound, onMarkerLost, updateSession]);
@@ -594,6 +621,17 @@ const ARScene = ({
         />
       )}
       
+      {/* Loading Libraries Overlay */}
+      {arState.loadingLibraries && (
+        <div className="loading-overlay">
+          <div className="loading-content">
+            <div className="loading-spinner"></div>
+            <p>{arState.loadingStatus}</p>
+            <small>Isso pode levar alguns segundos...</small>
+          </div>
+        </div>
+      )}
+      
       {/* AR Status Indicators */}
       <div className="ar-status">
         {arState.running && (
@@ -624,6 +662,45 @@ const ARScene = ({
       <style jsx>{`
         .ar-scene {
           background: #000;
+        }
+        
+        .loading-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.95);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+        }
+        
+        .loading-content {
+          text-align: center;
+          color: white;
+          padding: 2rem;
+        }
+        
+        .loading-spinner {
+          width: 50px;
+          height: 50px;
+          border: 4px solid rgba(139, 0, 0, 0.3);
+          border-top: 4px solid #8b0000;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 1rem;
+        }
+        
+        .loading-content p {
+          font-size: 1.1rem;
+          margin: 0.5rem 0;
+        }
+        
+        .loading-content small {
+          font-size: 0.9rem;
+          opacity: 0.7;
         }
         
         .ar-status {
@@ -678,6 +755,11 @@ const ARScene = ({
         @keyframes pulse {
           0%, 100% { opacity: 0.8; transform: translateX(-50%) scale(1); }
           50% { opacity: 1; transform: translateX(-50%) scale(1.05); }
+        }
+        
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
         
         @media (max-width: 768px) {
