@@ -1,0 +1,14 @@
+# ESLint ignore patterns
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# Generated files
+next-env.d.ts
+*.d.ts
+
+# Test files
+coverage/
+test-results/

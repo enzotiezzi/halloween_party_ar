@@ -1,0 +1,21 @@
+# Template QR Codes
+
+This directory contains pre-generated template QR codes for common uses.
+
+## Available Templates
+
+- `halloween-ar-demo.png` - Demo AR experience QR code
+- `error-fallback.png` - Fallback QR code for errors
+- `coming-soon.png` - Placeholder for future features
+
+## Template Specifications
+
+All templates follow these standards:
+- High contrast (black on white)
+- Error correction level H
+- Adequate margin (quiet zone)
+- Multiple size variants available
+
+## Usage
+
+Templates can be used as fallbacks or placeholders when dynamic generation fails.

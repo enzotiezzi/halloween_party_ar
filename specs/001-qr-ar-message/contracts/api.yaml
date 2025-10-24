@@ -1,0 +1,354 @@
+openapi: 3.0.3
+info:
+  title: QR Code AR Message API
+  description: API contracts for QR code generation and AR message experience
+  version: 1.0.0
+  contact:
+    name: Halloween Party AI Team
+
+servers:
+  - url: http://localhost:3000
+    description: Development server
+  - url: https://halloween-party-ai.vercel.app
+    description: Production server
+
+paths:
+  /api/qr-code:
+    get:
+      summary: Generate QR code for AR experience
+      description: Creates a QR code that serves as both website link and AR marker
+      parameters:
+        - name: size
+          in: query
+          description: QR code size in pixels
+          required: false
+          schema:
+            type: integer
+            minimum: 128
+            maximum: 512
+            default: 256
+        - name: format
+          in: query
+          description: Image format for QR code
+          required: false
+          schema:
+            type: string
+            enum: [png, svg]
+            default: png
+      responses:
+        '200':
+          description: QR code generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QRCodeResponse'
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/ar/capabilities:
+    get:
+      summary: Check device AR capabilities
+      description: Detects if the current device supports WebAR features
+      responses:
+        '200':
+          description: Device capabilities detected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceCapabilities'
+
+  /api/ar/message:
+    get:
+      summary: Get AR message configuration
+      description: Returns the Portuguese message and display configuration for AR
+      responses:
+        '200':
+          description: AR message configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ARMessageConfig'
+
+  /api/session:
+    post:
+      summary: Create new user session
+      description: Initializes a new session for tracking user interaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionStartRequest'
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '400':
+          description: Invalid session data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/session/{sessionId}/events:
+    post:
+      summary: Track session events
+      description: Records user interaction events during AR experience
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionEvent'
+      responses:
+        '200':
+          description: Event recorded successfully
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    QRCodeResponse:
+      type: object
+      required:
+        - id
+        - url
+        - imageData
+        - markerData
+      properties:
+        id:
+          type: string
+          description: Unique QR code identifier
+          example: "qr_001"
+        url:
+          type: string
+          format: uri
+          description: Website URL encoded in QR code
+          example: "https://halloween-party-ai.vercel.app/ar"
+        imageData:
+          type: string
+          description: Base64 encoded QR code image
+          example: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+        markerData:
+          type: object
+          description: MindAR marker training data
+          properties:
+            version:
+              type: string
+              example: "1.0"
+            imageUrl:
+              type: string
+              example: "/qr-codes/qr_001.png"
+            trackingData:
+              type: string
+              description: Base64 encoded tracking information
+        size:
+          type: integer
+          description: QR code size in pixels
+          example: 256
+        createdAt:
+          type: string
+          format: date-time
+          description: Generation timestamp
+
+    DeviceCapabilities:
+      type: object
+      required:
+        - hasCamera
+        - hasWebAR
+        - browserType
+      properties:
+        hasCamera:
+          type: boolean
+          description: Camera access available
+        hasWebAR:
+          type: boolean
+          description: WebAR features supported
+        browserType:
+          type: string
+          enum: [safari, chrome, firefox, edge, other]
+          description: Detected browser type
+        osType:
+          type: string
+          enum: [ios, android, windows, macos, linux, other]
+          description: Operating system type
+        webARFeatures:
+          type: array
+          items:
+            type: string
+          description: Specific WebAR capabilities
+          example: ["image-tracking", "world-tracking"]
+
+    ARMessageConfig:
+      type: object
+      required:
+        - content
+        - styling
+        - position
+      properties:
+        content:
+          type: string
+          description: Portuguese message text
+          example: "O vampiro se esconde no reflexo, mas Rupert percebeu a verdade… Siga-o para a próxima pista antes que ele desapareça também."
+        language:
+          type: string
+          description: Language code
+          example: "pt-BR"
+        styling:
+          type: object
+          required:
+            - fontSize
+            - color
+            - fontFamily
+          properties:
+            fontSize:
+              type: number
+              minimum: 0.1
+              maximum: 5.0
+              description: Text size in AR units
+              example: 1.5
+            color:
+              type: string
+              pattern: "^#[0-9A-Fa-f]{6}$"
+              description: Text color in hex format
+              example: "#FFFFFF"
+            fontFamily:
+              type: string
+              description: Font family name
+              example: "Arial"
+            backgroundColor:
+              type: string
+              pattern: "^#[0-9A-Fa-f]{6}$"
+              description: Background color (optional)
+              example: "#000000"
+            opacity:
+              type: number
+              minimum: 0
+              maximum: 1
+              description: Text opacity
+              example: 0.9
+        position:
+          type: object
+          required:
+            - x
+            - y
+            - z
+          properties:
+            x:
+              type: number
+              description: X coordinate relative to marker
+              example: 0
+            y:
+              type: number
+              description: Y coordinate relative to marker
+              example: 1
+            z:
+              type: number
+              description: Z coordinate (distance from marker)
+              example: 0.5
+
+    SessionStartRequest:
+      type: object
+      required:
+        - userAgent
+      properties:
+        userAgent:
+          type: string
+          description: Browser user agent string
+        referrer:
+          type: string
+          description: Page referrer (optional)
+
+    SessionResponse:
+      type: object
+      required:
+        - sessionId
+        - startTime
+      properties:
+        sessionId:
+          type: string
+          description: Unique session identifier
+          example: "sess_12345678"
+        startTime:
+          type: string
+          format: date-time
+          description: Session start timestamp
+
+    SessionEvent:
+      type: object
+      required:
+        - type
+        - timestamp
+      properties:
+        type:
+          type: string
+          enum: [
+            qr_scanned,
+            camera_permission_granted,
+            camera_permission_denied,
+            ar_initialized,
+            marker_detected,
+            message_displayed,
+            session_completed,
+            error_occurred
+          ]
+          description: Event type
+        timestamp:
+          type: string
+          format: date-time
+          description: Event timestamp
+        data:
+          type: object
+          description: Additional event data (optional)
+        error:
+          type: object
+          description: Error details if type is error_occurred
+          properties:
+            code:
+              type: string
+              description: Error code
+            message:
+              type: string
+              description: Error message
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type
+        message:
+          type: string
+          description: Human-readable error message
+        code:
+          type: string
+          description: Machine-readable error code
+        details:
+          type: object
+          description: Additional error details

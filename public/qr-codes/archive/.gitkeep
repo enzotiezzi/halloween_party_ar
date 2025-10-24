@@ -1,0 +1,27 @@
+# QR Code Archive
+
+This directory contains archived QR codes for historical tracking and analytics.
+
+## Purpose
+
+- Track QR code usage over time
+- Analyze scan patterns and popular codes
+- Maintain historical data for reporting
+- Debug issues with specific QR codes
+
+## Archive Process
+
+QR codes are archived when:
+- They reach a certain age
+- They have significant usage data
+- They are manually archived for analysis
+
+## Data Privacy
+
+Archived QR codes may contain:
+- Original content/URLs
+- Generation timestamps
+- Usage statistics
+- Performance metrics
+
+Personal information is not stored in QR code archives.

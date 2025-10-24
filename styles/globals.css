@@ -1,0 +1,325 @@
+/* Halloween AR Experience - Global Styles */
+
+/* Import mobile responsive styles */
+@import './mobile.css';
+
+/* Base styles and CSS Reset */
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  line-height: 1.6;
+  font-size: 16px;
+  background: #000;
+  color: #fff;
+  overflow-x: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Halloween Theme Variables */
+:root {
+  --halloween-orange: #ff6b35;
+  --halloween-purple: #8b5a9f;
+  --halloween-black: #1a0d1a;
+  --halloween-gold: #ffa500;
+  --vampire-red: #8b0000;
+  --ghost-white: #f8f8ff;
+  --shadow-opacity: 0.7;
+  
+  /* AR UI Colors */
+  --ar-success: #10b981;
+  --ar-warning: #f59e0b;
+  --ar-error: #ef4444;
+  --ar-info: #3b82f6;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 1rem 0;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: 2.5rem;
+}
+
+h2 {
+  font-size: 2rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+p {
+  margin: 0 0 1rem 0;
+}
+
+/* Halloween-specific styling */
+.halloween-bg {
+  background: linear-gradient(135deg, 
+    var(--halloween-black) 0%, 
+    var(--halloween-purple) 50%, 
+    var(--halloween-black) 100%);
+}
+
+.halloween-glow {
+  text-shadow: 
+    0 0 5px var(--halloween-orange),
+    0 0 10px var(--halloween-orange),
+    0 0 15px var(--halloween-orange);
+}
+
+.vampire-glow {
+  text-shadow: 
+    0 0 5px var(--vampire-red),
+    0 0 10px var(--vampire-red),
+    0 0 15px var(--vampire-red);
+}
+
+.spooky-border {
+  border: 2px solid var(--halloween-orange);
+  border-radius: 8px;
+  box-shadow: 
+    0 0 10px rgba(255, 107, 53, 0.3),
+    inset 0 0 10px rgba(255, 107, 53, 0.1);
+}
+
+/* Button styles */
+.btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--halloween-orange), var(--halloween-gold));
+  color: var(--halloween-black);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 107, 53, 0.4);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--halloween-orange);
+  border: 2px solid var(--halloween-orange);
+}
+
+.btn-secondary:hover {
+  background: var(--halloween-orange);
+  color: var(--halloween-black);
+}
+
+/* AR-specific styles */
+.ar-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.ar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.ar-controls {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 1rem;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.ar-status {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  z-index: 20;
+}
+
+.ar-status.ready {
+  background: var(--ar-success);
+  color: white;
+}
+
+.ar-status.loading {
+  background: var(--ar-warning);
+  color: white;
+}
+
+.ar-status.error {
+  background: var(--ar-error);
+  color: white;
+}
+
+/* QR Code styles */
+.qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 107, 53, 0.3);
+}
+
+.qr-code {
+  padding: 1rem;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+/* Loading animations */
+.loading-spinner {
+  border: 4px solid rgba(255, 107, 53, 0.3);
+  border-radius: 50%;
+  border-top: 4px solid var(--halloween-orange);
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  :root {
+    font-size: 14px;
+  }
+  
+  h1 {
+    font-size: 2rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+  
+  .ar-controls {
+    bottom: 1rem;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .qr-container {
+    padding: 1rem;
+    margin: 0 1rem;
+  }
+  
+  .ar-status {
+    top: 0.5rem;
+    right: 0.5rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* High contrast mode for accessibility */
+@media (prefers-contrast: high) {
+  .btn-primary {
+    background: var(--halloween-orange);
+    border: 2px solid var(--halloween-black);
+  }
+  
+  .spooky-border {
+    border-width: 3px;
+  }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .loading-spinner {
+    animation: none;
+    border-top-color: var(--halloween-orange);
+  }
+}
+
+/* Dark mode enhancements */
+@media (prefers-color-scheme: dark) {
+  .qr-container {
+    background: rgba(0, 0, 0, 0.8);
+    border-color: var(--halloween-orange);
+  }
+}
+
+/* Print styles */
+@media print {
+  .ar-controls,
+  .ar-status,
+  .loading-spinner {
+    display: none !important;
+  }
+  
+  .qr-code {
+    background: white !important;
+    color: black !important;
+  }
+}

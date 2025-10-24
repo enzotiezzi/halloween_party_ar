@@ -1,0 +1,22 @@
+# Generated QR Codes
+
+This directory contains dynamically generated QR codes.
+
+## Auto-cleanup
+
+Files in this directory may be automatically cleaned up based on:
+- Age (older than 24 hours)
+- Usage (not accessed recently)  
+- Storage limits
+
+## File Naming Convention
+
+- `ar-{timestamp}-{hash}.png` - AR experience QR codes
+- `session-{sessionId}-{hash}.png` - Session-specific QR codes
+- `temp-{id}-{hash}.png` - Temporary QR codes
+
+## Notes
+
+- This directory is managed by the application
+- Do not manually place files here
+- Generated files are temporary and not backed up

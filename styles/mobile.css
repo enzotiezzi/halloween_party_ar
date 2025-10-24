@@ -1,0 +1,479 @@
+/**
+ * Mobile Responsive Styles for Halloween AR Experience
+ * Optimized for mobile devices and various screen sizes
+ */
+
+/* Mobile-First Responsive Design */
+
+/* Extra Small Devices (Portrait phones, less than 576px) */
+@media (max-width: 575.98px) {
+  /* Layout adjustments */
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  /* Typography scaling */
+  h1 {
+    font-size: 1.75rem !important;
+    line-height: 1.2;
+  }
+
+  h2 {
+    font-size: 1.5rem !important;
+  }
+
+  h3 {
+    font-size: 1.25rem !important;
+  }
+
+  /* QR Code responsiveness */
+  .qr-container {
+    padding: 1rem;
+    margin: 0 0.5rem;
+  }
+
+  .qr-code {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Button scaling */
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    min-height: 44px; /* Touch target size */
+  }
+
+  /* AR status indicator */
+  .ar-status {
+    top: 0.5rem;
+    right: 0.5rem;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  /* Navigation and controls */
+  .ar-controls {
+    bottom: 1rem;
+    left: 1rem;
+    right: 1rem;
+    transform: none;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Message display */
+  .ar-message {
+    font-size: 1rem;
+    padding: 1rem;
+    max-width: 95%;
+    top: 40%;
+  }
+
+  .vampireMessage {
+    font-size: 1rem;
+    padding: 1rem;
+    max-width: 95%;
+  }
+
+  /* Instructions text */
+  .qr-instructions {
+    font-size: 0.875rem;
+    padding: 0.75rem;
+  }
+
+  /* Home page hero */
+  .halloween-hero h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .halloween-hero p {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* Small Devices (Landscape phones, 576px and up) */
+@media (min-width: 576px) and (max-width: 767.98px) {
+  .container {
+    max-width: 540px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .qr-container {
+    padding: 1.5rem;
+  }
+
+  .ar-controls {
+    bottom: 1.5rem;
+    flex-direction: row;
+    gap: 1rem;
+  }
+
+  .ar-message {
+    font-size: 1.1rem;
+    padding: 1.25rem;
+    max-width: 90%;
+  }
+}
+
+/* Medium Devices (Tablets, 768px and up) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .container {
+    max-width: 720px;
+  }
+
+  /* Two-column layouts for tablets */
+  .instruction-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .qr-display-tablet {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  .qr-display-tablet .qr-container {
+    flex: 0 0 auto;
+  }
+
+  .qr-display-tablet .qr-instructions {
+    flex: 1;
+    margin-top: 0;
+  }
+}
+
+/* Large Devices (Desktops, 992px and up) */
+@media (min-width: 992px) {
+  .container {
+    max-width: 960px;
+  }
+
+  /* Desktop-specific AR controls */
+  .ar-controls-desktop {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    flex-direction: column;
+    gap: 0.5rem;
+    bottom: auto;
+    transform: none;
+  }
+
+  /* Larger QR codes for desktop */
+  .qr-desktop {
+    min-width: 320px;
+    min-height: 320px;
+  }
+}
+
+/* Extra Large Devices (Large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+  .container {
+    max-width: 1140px;
+  }
+}
+
+/* Mobile-specific AR styles */
+@media (max-width: 768px) {
+  /* Full-screen AR experience */
+  .ar-scene-mobile {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+  }
+
+  /* Mobile camera feed */
+  .camera-feed-mobile {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Mobile AR overlay */
+  .ar-overlay-mobile {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+  }
+
+  /* Touch-friendly controls */
+  .ar-controls-mobile {
+    position: fixed;
+    bottom: 2rem;
+    left: 1rem;
+    right: 1rem;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: auto;
+  }
+
+  .ar-controls-mobile button {
+    min-width: 60px;
+    min-height: 60px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 107, 53, 0.9);
+    color: white;
+    font-size: 1.5rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .ar-controls-mobile button:active {
+    transform: scale(0.95);
+  }
+
+  /* Status indicators for mobile */
+  .mobile-status-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    z-index: 10;
+    pointer-events: auto;
+  }
+
+  .mobile-status-bar .status-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+    font-size: 0.875rem;
+  }
+
+  .mobile-status-bar .status-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* Mobile instructions overlay */
+  .mobile-instructions {
+    position: fixed;
+    bottom: 5rem;
+    left: 1rem;
+    right: 1rem;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.875rem;
+    backdrop-filter: blur(10px);
+    animation: fadeInOut 4s ease-in-out;
+    pointer-events: none;
+  }
+}
+
+/* Landscape orientation adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
+  .ar-controls-mobile {
+    bottom: 1rem;
+  }
+
+  .mobile-instructions {
+    bottom: 3rem;
+    font-size: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .ar-message {
+    font-size: 0.9rem;
+    padding: 0.75rem;
+    top: 30%;
+  }
+
+  .mobile-status-bar {
+    height: 50px;
+  }
+}
+
+/* Portrait orientation optimizations */
+@media (max-width: 768px) and (orientation: portrait) {
+  .qr-container {
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .halloween-hero {
+    min-height: 40vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .qr-code {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+
+  /* Higher resolution QR codes for retina displays */
+  .qr-code-retina {
+    width: 256px;
+    height: 256px;
+    background-size: 512px 512px;
+  }
+}
+
+/* Touch interaction improvements */
+@media (pointer: coarse) {
+  /* Larger touch targets */
+  button, .btn, a[role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better spacing for touch */
+  .ar-controls {
+    gap: 1rem;
+  }
+
+  .ar-controls button {
+    padding: 0.75rem 1.5rem;
+  }
+
+  /* Hover states disabled on touch devices */
+  .btn:hover {
+    transform: none;
+  }
+
+  .btn:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Accessibility improvements for mobile */
+@media (max-width: 768px) {
+  /* Focus styles for mobile */
+  button:focus,
+  .btn:focus {
+    outline: 3px solid #ff6b35;
+    outline-offset: 2px;
+  }
+
+  /* Screen reader improvements */
+  .sr-only-mobile {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .qr-code {
+      border: 2px solid #000;
+    }
+
+    .btn {
+      border: 2px solid currentColor;
+    }
+
+    .ar-message {
+      border: 3px solid #ff6b35;
+      background: #000;
+    }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .ar-message,
+    .vampireMessage {
+      animation: none;
+    }
+
+    .loading-spinner {
+      animation: none;
+    }
+
+    .btn {
+      transition: none;
+    }
+  }
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-appearance: none) {
+  .ar-scene-mobile {
+    /* Fix for iOS Safari viewport units */
+    height: -webkit-fill-available;
+  }
+
+  /* Fix for iOS Safari safe areas */
+  .mobile-status-bar {
+    padding-top: env(safe-area-inset-top);
+    height: calc(60px + env(safe-area-inset-top));
+  }
+
+  .ar-controls-mobile {
+    padding-bottom: env(safe-area-inset-bottom);
+    bottom: calc(2rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Android Chrome specific fixes */
+@media screen and (-webkit-min-device-pixel-ratio: 0) and (min-color-index: 0) {
+  .ar-scene-mobile {
+    /* Fix for Android Chrome address bar */
+    height: 100vh;
+    height: calc(var(--vh, 1vh) * 100);
+  }
+}
+
+/* Performance optimizations for mobile */
+@media (max-width: 768px) {
+  /* Reduce animations on lower-end devices */
+  @media (max-resolution: 150dpi) {
+    .halloween-glow {
+      text-shadow: 0 0 5px #ff6b35;
+    }
+
+    .ar-message {
+      animation-duration: 4s;
+    }
+  }
+
+  /* Simplify effects on very small screens */
+  @media (max-width: 320px) {
+    .spooky-border {
+      box-shadow: none;
+      border: 1px solid #ff6b35;
+    }
+
+    .backdrop-blur-sm {
+      backdrop-filter: none;
+      background: rgba(0, 0, 0, 0.8);
+    }
+  }
+}
