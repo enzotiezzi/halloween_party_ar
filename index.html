@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>O Espelho Sussurra...</title>
+    <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: black;
+        }
+
+        .fade {
+            animation: fadeIn 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .shake {
+            animation: shake 0.2s infinite;
+        }
+
+        @keyframes shake {
+            0% {
+                transform: translate(0, 0);
+            }
+
+            25% {
+                transform: translate(0.005, -0.005);
+            }
+
+            50% {
+                transform: translate(-0.005, 0.005);
+            }
+
+            75% {
+                transform: translate(0.005, 0.005);
+            }
+
+            100% {
+                transform: translate(-0.005, -0.005);
+            }
+        }
+
+        .blood-drip {
+            animation: drip 2s ease-in infinite;
+        }
+
+        @keyframes drip {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(0.5);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a-scene mindar-image="imageTargetSrc: ./espelho.mind; autoStart: true;" color-space="sRGB"
+        renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: true">
+        <a-assets>
+            <audio id="sussurro"
+                src="https://cdn.pixabay.com/download/audio/2023/04/07/audio_fa96c63df9.mp3?filename=ghost-breath-145018.mp3"></audio>
+        </a-assets>
+
+        <a-camera position="0 0 0" look-controls="enabled: true"></a-camera>
+
+        <a-entity mindar-image-target="targetIndex: 0">
+            <!-- Névoa escura -->
+            <a-entity geometry="primitive: plane; width: 1.5; height: 1" material="color: #1a0000; opacity: 0.5"
+                position="0 0 0"></a-entity>
+
+            <!-- Texto assustador principal -->
+            <a-entity id="frase"
+                text="value: O assassino não tem reflexo. Mas alguém o viu — e não viveu para contar.; color: #8B0000; align: center; width: 1.2;"
+                position="0 0.2 0.05" scale="1.2 1.2 1.2"></a-entity>
+
+            <!-- Gotas de sangue -->
+            <a-entity id="blood1" geometry="primitive: sphere; radius: 0.02" material="color: #8B0000; opacity: 0.9"
+                position="-0.3 0.4 0.06" class="blood-drip"></a-entity>
+            <a-entity id="blood2" geometry="primitive: sphere; radius: 0.015" material="color: #8B0000; opacity: 0.9"
+                position="0.2 0.35 0.06" class="blood-drip"></a-entity>
+            <a-entity id="blood3" geometry="primitive: sphere; radius: 0.018" material="color: #8B0000; opacity: 0.9"
+                position="0.4 0.38 0.06" class="blood-drip"></a-entity>
+
+            <!-- Mensagem secundária que aparece depois -->
+            <a-entity id="frase2" text="value: O sangue nunca mente...; color: #FF0000; align: center; width: 1;"
+                position="0 -0.15 0.05" scale="0.8 0.8 0.8" visible="false"></a-entity>
+
+            <!-- Aviso final -->
+            <a-entity id="frase3" text="value: VOCÊ É O PRÓXIMO; color: #FF0000; align: center; width: 1;"
+                position="0 -0.35 0.05" scale="1 1 1" visible="false"></a-entity>
+
+            <!-- Som fantasmagórico -->
+            <a-sound src="#sussurro" autoplay="false" id="som" loop="true" volume="0.7"></a-sound>
+        </a-entity>
+
+        <script>
+            // Animações "creepy"
+            const entity = document.getElementById("frase");
+            const frase2 = document.getElementById("frase2");
+            const frase3 = document.getElementById("frase3");
+            entity.classList.add("fade");
+
+            let timeoutId1, timeoutId2;
+
+            // Ativa o som quando o target é detectado
+            document.addEventListener("targetFound", () => {
+                const som = document.querySelector("#som");
+                if (som && !som.components.sound.isPlaying) som.components.sound.playSound();
+                entity.classList.add("shake");
+
+                // Mensagens progressivas de terror
+                timeoutId1 = setTimeout(() => {
+                    frase2.setAttribute("visible", "true");
+                    frase2.classList.add("fade");
+                }, 3000);
+
+                timeoutId2 = setTimeout(() => {
+                    frase3.setAttribute("visible", "true");
+                    frase3.classList.add("shake");
+                }, 6000);
+            });
+
+            document.addEventListener("targetLost", () => {
+                const som = document.querySelector("#som");
+                if (som && som.components.sound.isPlaying) som.components.sound.stopSound();
+                entity.classList.remove("shake");
+
+                // Limpa os timeouts e reseta as mensagens
+                clearTimeout(timeoutId1);
+                clearTimeout(timeoutId2);
+                frase2.setAttribute("visible", "false");
+                frase2.classList.remove("fade");
+                frase3.setAttribute("visible", "false");
+                frase3.classList.remove("shake");
+            });
+        </script>
+    </a-scene>
+</body>
+
+</html>
