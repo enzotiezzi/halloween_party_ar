@@ -50,36 +50,87 @@ const ARScene = ({
   // Load MindAR and Three.js libraries
   const loadLibraries = useCallback(async () => {
     try {
-      // Check if libraries are already loaded
-      if (window.MINDAR && window.THREE) {
+      // Check if libraries are already loaded and valid
+      if (window.MINDAR?.IMAGE?.MindARThree && window.THREE) {
+        console.log('AR libraries already loaded');
         return { MINDAR: window.MINDAR, THREE: window.THREE };
       }
 
+      console.log('Loading AR libraries...');
+
       // Load Three.js
       if (!window.THREE) {
+        console.log('Loading Three.js...');
         await loadScript('https://unpkg.com/three@0.158.0/build/three.min.js');
+        
+        // Wait for THREE to be available
+        await waitForGlobal('THREE', 5000);
+        console.log('Three.js loaded successfully');
       }
 
       // Load MindAR
-      if (!window.MINDAR) {
-        await loadScript('https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image.prod.js');
+      if (!window.MINDAR?.IMAGE?.MindARThree) {
+        console.log('Loading MindAR...');
+        await loadScript('https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js');
+        
+        // Wait for MINDAR to be available
+        await waitForGlobal('MINDAR', 5000);
+        
+        // Verify MINDAR.IMAGE is available
+        if (!window.MINDAR?.IMAGE?.MindARThree) {
+          throw new Error('MindAR IMAGE module not available');
+        }
+        console.log('MindAR loaded successfully');
       }
 
       return { MINDAR: window.MINDAR, THREE: window.THREE };
     } catch (error) {
       console.error('Failed to load AR libraries:', error);
-      throw new Error('AR libraries failed to load');
+      throw new Error(`AR libraries failed to load: ${error.message}`);
     }
   }, []);
 
   // Utility function to load scripts
   const loadScript = (src) => {
     return new Promise((resolve, reject) => {
+      // Check if script already exists
+      const existing = document.querySelector(`script[src="${src}"]`);
+      if (existing) {
+        resolve();
+        return;
+      }
+
       const script = document.createElement('script');
       script.src = src;
-      script.onload = resolve;
-      script.onerror = reject;
+      script.async = true;
+      script.onload = () => {
+        console.log(`Script loaded: ${src}`);
+        resolve();
+      };
+      script.onerror = (error) => {
+        console.error(`Script failed to load: ${src}`, error);
+        reject(new Error(`Failed to load script: ${src}`));
+      };
       document.head.appendChild(script);
+    });
+  };
+
+  // Wait for a global variable to be available
+  const waitForGlobal = (globalName, timeout = 5000) => {
+    return new Promise((resolve, reject) => {
+      const startTime = Date.now();
+      
+      const checkGlobal = () => {
+        if (window[globalName]) {
+          resolve(window[globalName]);
+        } else if (Date.now() - startTime > timeout) {
+          reject(new Error(`Timeout waiting for ${globalName}`));
+        } else {
+          setTimeout(checkGlobal, 100);
+        }
+      };
+      
+      checkGlobal();
     });
   };
 
@@ -199,7 +250,19 @@ const ARScene = ({
   // Initialize MindAR
   const initializeMindAR = useCallback(async () => {
     try {
+      console.log('Starting MindAR initialization...');
       const { MINDAR, THREE } = await loadLibraries();
+      
+      // Verify libraries are properly loaded
+      if (!MINDAR?.IMAGE?.MindARThree) {
+        throw new Error('MindAR library not properly loaded. MINDAR.IMAGE.MindARThree is not available.');
+      }
+      
+      if (!THREE) {
+        throw new Error('Three.js library not properly loaded.');
+      }
+      
+      console.log('AR libraries verified successfully');
       
       // Create QR code marker image
       const markerImage = await createQRMarkerImage();
