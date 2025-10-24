@@ -14,6 +14,7 @@ const ARScene = ({
   onMarkerFound,
   onMarkerLost,
   onError,
+  onCameraReady,
   children,
   className = '',
   style = {}
@@ -32,7 +33,6 @@ const ARScene = ({
 
   // Refs
   const containerRef = useRef(null);
-  const canvasRef = useRef(null);
   const mindARRef = useRef(null);
   const threeSceneRef = useRef(null);
   const rendererRef = useRef(null);
@@ -99,36 +99,7 @@ const ARScene = ({
     }
   }, []);
 
-  // Initialize Three.js scene
-  const initializeThreeScene = useCallback((THREE) => {
-    try {
-      // Create scene
-      const scene = new THREE.Scene();
-      
-      // Create camera (will be replaced by MindAR camera)
-      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-      
-      // Create renderer
-      const renderer = new THREE.WebGLRenderer({ 
-        canvas: canvasRef.current,
-        alpha: true,
-        antialias: capabilities?.device?.class === 'high_end' ? true : false
-      });
-      
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio for performance
-      
-      // Store references
-      threeSceneRef.current = scene;
-      rendererRef.current = renderer;
-      cameraRef.current = camera;
 
-      return { scene, camera, renderer };
-    } catch (error) {
-      console.error('Failed to initialize Three.js scene:', error);
-      throw error;
-    }
-  }, [capabilities]);
 
   // Create AR marker content
   const createARContent = useCallback((THREE, scene) => {
@@ -230,27 +201,52 @@ const ARScene = ({
     try {
       const { MINDAR, THREE } = await loadLibraries();
       
-      // Initialize Three.js
-      const { scene, camera, renderer } = initializeThreeScene(THREE);
-      
       // Create QR code marker image
       const markerImage = await createQRMarkerImage();
       
-      // Initialize MindAR
+      // Ensure container is ready
+      if (!containerRef.current) {
+        throw new Error('AR container not ready');
+      }
+      
+      // Validate container dimensions
+      const containerRect = containerRef.current.getBoundingClientRect();
+      if (!containerRect.width || !containerRect.height) {
+        throw new Error('AR container has invalid dimensions');
+      }
+      
+      console.log('Initializing MindAR with container:', {
+        width: containerRect.width,
+        height: containerRect.height
+      });
+      
+      // Initialize MindAR with proper configuration
+      // Note: MindAR will handle its own camera stream internally
       const mindar = new MINDAR.IMAGE.MindARThree({
         container: containerRef.current,
         imageTargetSrc: markerImage,
         maxTrack: 1,
         uiLoading: 'no',
         uiScanning: 'no',
-        uiError: 'no'
+        uiError: 'no',
+        filterMinCF: 0.0001,
+        filterBeta: 0.001,
+        warmupTolerance: 5,
+        missTolerance: 5,
+        // Let MindAR handle camera internally
+        autoStart: false
       });
       
       // Store reference
       mindARRef.current = mindar;
       
-      // Get MindAR scene and camera
+      // Get MindAR scene, camera, and renderer
       const { scene: mindARScene, camera: mindARCamera, renderer: mindARRenderer } = mindar;
+      
+      // Ensure all components are initialized
+      if (!mindARScene || !mindARCamera || !mindARRenderer) {
+        throw new Error('MindAR components not properly initialized');
+      }
       
       // Update references
       threeSceneRef.current = mindARScene;
@@ -306,7 +302,7 @@ const ARScene = ({
       console.error('Failed to initialize MindAR:', error);
       throw error;
     }
-  }, [loadLibraries, initializeThreeScene, createARContent, onMarkerFound, onMarkerLost, updateSession]);
+  }, [loadLibraries, createARContent, onMarkerFound, onMarkerLost, updateSession]);
 
   // Create QR marker image from QR code data
   const createQRMarkerImage = useCallback(async () => {
@@ -345,8 +341,13 @@ const ARScene = ({
       
       setArState(prev => ({ ...prev, running: true, error: null }));
       
-      // Start MindAR
+      // Start MindAR (this will request camera permission)
       await mindARRef.current.start();
+      
+      // Notify parent that camera is ready
+      if (onCameraReady) {
+        onCameraReady(null, { source: 'mindar' });
+      }
       
       // Start performance monitoring
       startPerformanceMonitoring();
@@ -361,6 +362,12 @@ const ARScene = ({
       
     } catch (error) {
       console.error('Failed to start AR:', error);
+      
+      // Check if it's a camera permission error
+      if (error.name === 'NotAllowedError' || error.message.includes('permission')) {
+        error.message = 'Camera permission denied. Please allow camera access and try again.';
+      }
+      
       setArState(prev => ({ 
         ...prev, 
         running: false, 
@@ -371,7 +378,7 @@ const ARScene = ({
         onError(error);
       }
     }
-  }, [capabilities, updateSession, onError]);
+  }, [capabilities, onCameraReady, updateSession, onError]);
 
   // Stop AR experience
   const stopAR = useCallback(async () => {
@@ -427,25 +434,45 @@ const ARScene = ({
     monitor();
   }, [arState.running]);
 
-  // Initialize AR when camera stream is available
+  // Initialize AR when component mounts
   useEffect(() => {
-    if (cameraStream && !arState.initialized) {
-      fetchVampireMessage().then(() => {
-        initializeMindAR().then(() => {
-          setArState(prev => ({ ...prev, initialized: true }));
+    if (!arState.initialized) {
+      // Add a small delay to ensure DOM is ready
+      const initTimer = setTimeout(() => {
+        fetchVampireMessage().then(() => {
+          initializeMindAR().then(() => {
+            setArState(prev => ({ ...prev, initialized: true }));
+          }).catch(error => {
+            console.error('AR initialization failed:', error);
+            setArState(prev => ({ 
+              ...prev, 
+              error: error.message 
+            }));
+            if (onError) {
+              onError(error);
+            }
+          });
         }).catch(error => {
-          console.error('AR initialization failed:', error);
-          setArState(prev => ({ 
-            ...prev, 
-            error: error.message 
-          }));
-          if (onError) {
-            onError(error);
-          }
+          console.error('Failed to fetch vampire message:', error);
+          // Continue with AR initialization even if message fetch fails
+          initializeMindAR().then(() => {
+            setArState(prev => ({ ...prev, initialized: true }));
+          }).catch(error => {
+            console.error('AR initialization failed:', error);
+            setArState(prev => ({ 
+              ...prev, 
+              error: error.message 
+            }));
+            if (onError) {
+              onError(error);
+            }
+          });
         });
-      });
+      }, 300); // Give DOM time to settle
+      
+      return () => clearTimeout(initTimer);
     }
-  }, [cameraStream, arState.initialized, fetchVampireMessage, initializeMindAR, onError]);
+  }, [arState.initialized, fetchVampireMessage, initializeMindAR, onError]);
 
   // Auto-start AR when initialized
   useEffect(() => {
@@ -485,22 +512,12 @@ const ARScene = ({
         position: 'relative',
         width: '100%',
         height: '100%',
+        minHeight: '100vh',
         overflow: 'hidden',
         ...style
       }}
     >
-      {/* AR Canvas */}
-      <canvas
-        ref={canvasRef}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          touchAction: 'none'
-        }}
-      />
+      {/* MindAR will inject its own canvas and video elements here */}
       
       {/* Message Overlay */}
       {vampireMessage && (

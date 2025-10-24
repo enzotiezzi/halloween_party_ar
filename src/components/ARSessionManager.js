@@ -414,27 +414,15 @@ const ARSessionManager = ({
         sessionState.phase === 'initializing' || 
         sessionState.phase === 'active') && (
         <>
-          {/* Camera Handler */}
-          <CameraHandler
+          {/* AR Scene - MindAR handles camera internally */}
+          <ARScene
+            cameraStream={null}
+            qrCodeData={qrCodeData}
+            onMarkerFound={handleMarkerFound}
+            onMarkerLost={handleMarkerLost}
+            onError={handleARError}
             onCameraReady={handleCameraReady}
-            onError={handleCameraError}
-            onPermissionDenied={handleCameraError}
-            autoStart={true}
-            facingMode="environment"
-          >
-            {(cameraAPI) => (
-              /* AR Scene */
-              sessionState.cameraReady && (
-                <ARScene
-                  cameraStream={cameraStream}
-                  qrCodeData={qrCodeData}
-                  onMarkerFound={handleMarkerFound}
-                  onMarkerLost={handleMarkerLost}
-                  onError={handleARError}
-                />
-              )
-            )}
-          </CameraHandler>
+          />
 
           {/* Session Controls */}
           <div className="session-controls">
