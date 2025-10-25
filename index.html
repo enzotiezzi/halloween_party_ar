@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aframe-troika-text@0.11.0/dist/aframe-troika-text.min.js"></script>
     <style>
         body {
             margin: 0;
@@ -14,59 +15,50 @@
             background-color: black;
         }
 
-        .fade {
-            animation: fadeIn 3s ease-in-out infinite alternate;
-        }
-
-        @keyframes fadeIn {
-            0% {
-                opacity: 0.5;
-            }
-
-            100% {
-                opacity: 1;
-            }
-        }
-
+        /* Efeito de tremor sutil e perturbador */
         .shake {
-            animation: shake 0.2s infinite;
+            animation: creepyShake 0.15s infinite;
         }
 
-        @keyframes shake {
-            0% {
-                transform: translate(0, 0);
+        @keyframes creepyShake {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
             }
 
-            25% {
-                transform: translate(0.005, -0.005);
+            10% {
+                transform: translate(-1px, 1px) rotate(-0.3deg);
+            }
+
+            20% {
+                transform: translate(1px, -1px) rotate(0.3deg);
+            }
+
+            30% {
+                transform: translate(-1px, -1px) rotate(-0.2deg);
+            }
+
+            40% {
+                transform: translate(1px, 1px) rotate(0.2deg);
             }
 
             50% {
-                transform: translate(-0.005, 0.005);
+                transform: translate(-1px, 0) rotate(-0.1deg);
             }
 
-            75% {
-                transform: translate(0.005, 0.005);
+            60% {
+                transform: translate(1px, 0) rotate(0.1deg);
             }
 
-            100% {
-                transform: translate(-0.005, -0.005);
-            }
-        }
-
-        .blood-drip {
-            animation: drip 2s ease-in infinite;
-        }
-
-        @keyframes drip {
-            0% {
-                transform: translateY(0);
-                opacity: 1;
+            70% {
+                transform: translate(0, -1px) rotate(-0.2deg);
             }
 
-            100% {
-                transform: translateY(0.5);
-                opacity: 0;
+            80% {
+                transform: translate(0, 1px) rotate(0.2deg);
+            }
+
+            90% {
+                transform: translate(-1px, 1px) rotate(-0.1deg);
             }
         }
     </style>
@@ -84,74 +76,61 @@
         <a-camera position="0 0 0" look-controls="enabled: true"></a-camera>
 
         <a-entity mindar-image-target="targetIndex: 0">
-            <!-- Névoa escura -->
-            <a-entity geometry="primitive: plane; width: 1.5; height: 1" material="color: #1a0000; opacity: 0.5"
-                position="0 0 0"></a-entity>
+            <!-- Névoa escura atmosférica em 3D com múltiplas camadas -->
+            <a-entity geometry="primitive: plane; width: 2; height: 1.5"
+                material="color: #0a0000; opacity: 0.7; side: double" position="0 0 -0.05"
+                animation="property: material.opacity; to: 0.85; dur: 3000; dir: alternate; loop: true; easing: easeInOutSine"></a-entity>
 
-            <!-- Texto assustador principal -->
+            <a-entity geometry="primitive: plane; width: 1.8; height: 1.3"
+                material="color: #1a0000; opacity: 0.5; side: double" position="0 0 -0.03"
+                animation="property: material.opacity; to: 0.7; dur: 2500; dir: alternate; loop: true; delay: 500; easing: easeInOutSine"></a-entity>
+
+            <!-- Texto assustador principal com múltiplos efeitos creepy -->
             <a-entity id="frase"
-                text="value: O assassino não tem reflexo. Mas alguém o viu — e não viveu para contar.; color: #8B0000; align: center; width: 1.2;"
-                position="0 0.2 0.05" scale="1.2 1.2 1.2"></a-entity>
-
-            <!-- Gotas de sangue -->
-            <a-entity id="blood1" geometry="primitive: sphere; radius: 0.02" material="color: #8B0000; opacity: 0.9"
-                position="-0.3 0.4 0.06" class="blood-drip"></a-entity>
-            <a-entity id="blood2" geometry="primitive: sphere; radius: 0.015" material="color: #8B0000; opacity: 0.9"
-                position="0.2 0.35 0.06" class="blood-drip"></a-entity>
-            <a-entity id="blood3" geometry="primitive: sphere; radius: 0.018" material="color: #8B0000; opacity: 0.9"
-                position="0.4 0.38 0.06" class="blood-drip"></a-entity>
-
-            <!-- Mensagem secundária que aparece depois -->
-            <a-entity id="frase2" text="value: O sangue nunca mente...; color: #FF0000; align: center; width: 1;"
-                position="0 -0.15 0.05" scale="0.8 0.8 0.8" visible="false"></a-entity>
-
-            <!-- Aviso final -->
-            <a-entity id="frase3" text="value: VOCÊ É O PRÓXIMO; color: #FF0000; align: center; width: 1;"
-                position="0 -0.35 0.05" scale="1 1 1" visible="false"></a-entity>
+                position="0 0 0.15" scale="1 1 1"
+                animation="property: scale; to: 1.08 1.08 1.08; dur: 1500; dir: alternate; loop: true; easing: easeInOutSine"
+                animation__opacity="property: troika-text.fillOpacity; from: 0.7; to: 1; dur: 2000; dir: alternate; loop: true; easing: easeInOutQuad"
+                animation__position="property: position; to: 0.01 0.01 0.17; dur: 150; dir: alternate; loop: true; easing: linear"
+                animation__rotation="property: rotation; to: 0 0 1.5; dur: 2500; dir: alternate; loop: true; easing: easeInOutSine"></a-entity>
 
             <!-- Som fantasmagórico -->
             <a-sound src="#sussurro" autoplay="false" id="som" loop="true" volume="0.7"></a-sound>
         </a-entity>
 
         <script>
-            // Animações "creepy"
-            const entity = document.getElementById("frase");
-            const frase2 = document.getElementById("frase2");
-            const frase3 = document.getElementById("frase3");
-            entity.classList.add("fade");
+            // Aguarda o carregamento da cena
+            document.querySelector('a-scene').addEventListener('loaded', () => {
+                const frase = document.querySelector("#frase");
 
-            let timeoutId1, timeoutId2;
+                // Define o texto com troika-text para suporte completo a Unicode
+                frase.setAttribute('troika-text', {
+                    value: 'O assassino não tem reflexo.\nMas alguém o viu — e não viveu para contar.',
+                    color: '#8B0000',
+                    align: 'center',
+                    maxWidth: 1.5,
+                    fontSize: 0.08,
+                    lineHeight: 1.2,
+                    anchorX: 'center',
+                    anchorY: 'middle'
+                });
+
+                // Adiciona classe CSS de tremor
+                frase.classList.add("shake");
+            });
 
             // Ativa o som quando o target é detectado
             document.addEventListener("targetFound", () => {
                 const som = document.querySelector("#som");
-                if (som && !som.components.sound.isPlaying) som.components.sound.playSound();
-                entity.classList.add("shake");
-
-                // Mensagens progressivas de terror
-                timeoutId1 = setTimeout(() => {
-                    frase2.setAttribute("visible", "true");
-                    frase2.classList.add("fade");
-                }, 3000);
-
-                timeoutId2 = setTimeout(() => {
-                    frase3.setAttribute("visible", "true");
-                    frase3.classList.add("shake");
-                }, 6000);
+                if (som && !som.components.sound.isPlaying) {
+                    som.components.sound.playSound();
+                }
             });
 
             document.addEventListener("targetLost", () => {
                 const som = document.querySelector("#som");
-                if (som && som.components.sound.isPlaying) som.components.sound.stopSound();
-                entity.classList.remove("shake");
-
-                // Limpa os timeouts e reseta as mensagens
-                clearTimeout(timeoutId1);
-                clearTimeout(timeoutId2);
-                frase2.setAttribute("visible", "false");
-                frase2.classList.remove("fade");
-                frase3.setAttribute("visible", "false");
-                frase3.classList.remove("shake");
+                if (som && som.components.sound.isPlaying) {
+                    som.components.sound.stopSound();
+                }
             });
         </script>
     </a-scene>
