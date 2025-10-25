@@ -71,19 +71,49 @@
         <a-assets>
             <audio id="sussurro"
                 src="https://cdn.pixabay.com/download/audio/2023/04/07/audio_fa96c63df9.mp3?filename=ghost-breath-145018.mp3"></audio>
+            <audio id="whispers"
+                src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_4bf3c2cbf9.mp3?filename=creepy-background-daniel_simon.mp3"></audio>
+            <audio id="scream"
+                src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c9156f5dfe.mp3?filename=horror-scream-6378.mp3"></audio>
+            <audio id="heartbeat"
+                src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_1e8bc7c00b.mp3?filename=heartbeat-85747.mp3"></audio>
+            <img id="creepyFace" crossorigin="anonymous"
+                src="https://images.unsplash.com/photo-1509248961158-e54f6934749c?w=512&q=80">
         </a-assets>
 
         <a-camera position="0 0 0" look-controls="enabled: true"></a-camera>
 
         <a-entity mindar-image-target="targetIndex: 0">
-            <!-- Névoa escura atmosférica em 3D com múltiplas camadas -->
-            <a-entity geometry="primitive: plane; width: 2; height: 1.5"
-                material="color: #0a0000; opacity: 0.7; side: double" position="0 0 -0.05"
+            <!-- Névoa escura atmosférica em 3D - escurece gradualmente -->
+            <a-entity id="fog1" geometry="primitive: plane; width: 2; height: 1.5"
+                material="color: #0a0000; opacity: 0.5; side: double" position="0 0 -0.05"
                 animation="property: material.opacity; to: 0.85; dur: 3000; dir: alternate; loop: true; easing: easeInOutSine"></a-entity>
 
-            <a-entity geometry="primitive: plane; width: 1.8; height: 1.3"
-                material="color: #1a0000; opacity: 0.5; side: double" position="0 0 -0.03"
+            <a-entity id="fog2" geometry="primitive: plane; width: 1.8; height: 1.3"
+                material="color: #1a0000; opacity: 0.3; side: double" position="0 0 -0.03"
                 animation="property: material.opacity; to: 0.7; dur: 2500; dir: alternate; loop: true; delay: 500; easing: easeInOutSine"></a-entity>
+
+            <!-- Vinheta escura nas bordas - intensifica com o tempo -->
+            <a-entity id="vignette" geometry="primitive: ring; radiusInner: 0.3; radiusOuter: 1.5"
+                material="color: #000000; opacity: 0; side: double; shader: flat" position="0 0 0.05"
+                rotation="0 0 0"></a-entity>
+
+            <!-- Gotas de sangue que aparecem gradualmente -->
+            <a-entity id="blood1" geometry="primitive: sphere; radius: 0.015"
+                material="color: #8B0000; opacity: 0; metalness: 0.7; roughness: 0.2" position="-0.4 0.35 0.1"
+                visible="false"></a-entity>
+
+            <a-entity id="blood2" geometry="primitive: sphere; radius: 0.012"
+                material="color: #8B0000; opacity: 0; metalness: 0.7; roughness: 0.2" position="0.3 0.4 0.08"
+                visible="false"></a-entity>
+
+            <a-entity id="blood3" geometry="primitive: sphere; radius: 0.018"
+                material="color: #8B0000; opacity: 0; metalness: 0.7; roughness: 0.2" position="-0.2 0.25 0.12"
+                visible="false"></a-entity>
+
+            <a-entity id="blood4" geometry="primitive: sphere; radius: 0.01"
+                material="color: #8B0000; opacity: 0; metalness: 0.7; roughness: 0.2" position="0.45 0.3 0.09"
+                visible="false"></a-entity>
 
             <!-- Texto assustador principal com múltiplos efeitos creepy -->
             <a-entity id="frase"
@@ -93,11 +123,33 @@
                 animation__position="property: position; to: 0.01 0.01 0.17; dur: 150; dir: alternate; loop: true; easing: linear"
                 animation__rotation="property: rotation; to: 0 0 1.5; dur: 2500; dir: alternate; loop: true; easing: easeInOutSine"></a-entity>
 
-            <!-- Som fantasmagórico -->
+            <!-- Face assustadora para o jump scare -->
+            <a-entity id="jumpScareFace"
+                geometry="primitive: plane; width: 1.2; height: 1.2"
+                material="src: #creepyFace; transparent: true; opacity: 0"
+                position="0 0 0.5"
+                scale="0.1 0.1 0.1"
+                visible="false"></a-entity>
+
+            <!-- Flash branco para o jump scare -->
+            <a-entity id="flash"
+                geometry="primitive: plane; width: 3; height: 3"
+                material="color: #FFFFFF; opacity: 0; side: double; shader: flat"
+                position="0 0 0.4"
+                visible="false"></a-entity>
+
+            <!-- Sons -->
             <a-sound src="#sussurro" autoplay="false" id="som" loop="true" volume="0.7"></a-sound>
+            <a-sound src="#whispers" autoplay="false" id="whisperSound" loop="true" volume="0"></a-sound>
+            <a-sound src="#heartbeat" autoplay="false" id="heartbeatSound" loop="true" volume="0"></a-sound>
+            <a-sound src="#scream" autoplay="false" id="screamSound" volume="1.5"></a-sound>
         </a-entity>
 
         <script>
+            let tensionTimeouts = [];
+            let jumpScareTimeout = null;
+            let isScareTriggered = false;
+
             // Aguarda o carregamento da cena
             document.querySelector('a-scene').addEventListener('loaded', () => {
                 const frase = document.querySelector("#frase");
@@ -118,19 +170,239 @@
                 frase.classList.add("shake");
             });
 
-            // Ativa o som quando o target é detectado
+            // Função para construir tensão gradualmente (0-10 segundos)
+            function buildTension() {
+                const whisperSound = document.querySelector("#whisperSound");
+                const heartbeatSound = document.querySelector("#heartbeatSound");
+                const vignette = document.querySelector("#vignette");
+                const fog1 = document.querySelector("#fog1");
+                const fog2 = document.querySelector("#fog2");
+                const frase = document.querySelector("#frase");
+
+                // Inicia sons ambiente
+                if (whisperSound && !whisperSound.components.sound.isPlaying) {
+                    whisperSound.components.sound.playSound();
+                }
+                if (heartbeatSound && !heartbeatSound.components.sound.isPlaying) {
+                    heartbeatSound.components.sound.playSound();
+                }
+
+                // Aumenta volume dos sons gradualmente (0 -> 0.3 em 10s)
+                let volumeStep = 0;
+                const volumeInterval = setInterval(() => {
+                    volumeStep += 0.03;
+                    if (whisperSound) whisperSound.components.sound.volume = Math.min(volumeStep, 0.3);
+                    if (heartbeatSound) heartbeatSound.components.sound.volume = Math.min(volumeStep * 0.5, 0.15);
+                    if (volumeStep >= 0.3) clearInterval(volumeInterval);
+                }, 333); // 10 segundos / 30 passos
+
+                tensionTimeouts.push(volumeInterval);
+
+                // Escurece a vinheta gradualmente
+                if (vignette) {
+                    vignette.setAttribute('animation', {
+                        property: 'material.opacity',
+                        from: 0,
+                        to: 0.6,
+                        dur: 10000,
+                        easing: 'easeInQuad'
+                    });
+                }
+
+                // Intensifica o tremor do texto
+                tensionTimeouts.push(setTimeout(() => {
+                    if (frase) {
+                        frase.setAttribute('animation__position', {
+                            property: 'position',
+                            to: '0.02 0.02 0.17',
+                            dur: 100,
+                            dir: 'alternate',
+                            loop: true,
+                            easing: 'linear'
+                        });
+                    }
+                }, 5000));
+
+                // Aparecem gotas de sangue progressivamente
+                const blood1 = document.querySelector("#blood1");
+                const blood2 = document.querySelector("#blood2");
+                const blood3 = document.querySelector("#blood3");
+                const blood4 = document.querySelector("#blood4");
+
+                tensionTimeouts.push(setTimeout(() => {
+                    if (blood1) {
+                        blood1.setAttribute('visible', 'true');
+                        blood1.setAttribute('animation', 'property: material.opacity; to: 0.9; dur: 1000');
+                        blood1.setAttribute('animation__drop', 'property: position; to: -0.4 0.1 0.1; dur: 2000; easing: easeInQuad; loop: true');
+                    }
+                }, 3000));
+
+                tensionTimeouts.push(setTimeout(() => {
+                    if (blood2) {
+                        blood2.setAttribute('visible', 'true');
+                        blood2.setAttribute('animation', 'property: material.opacity; to: 0.9; dur: 1000');
+                        blood2.setAttribute('animation__drop', 'property: position; to: 0.3 0.15 0.08; dur: 2500; easing: easeInQuad; loop: true; delay: 500');
+                    }
+                }, 5000));
+
+                tensionTimeouts.push(setTimeout(() => {
+                    if (blood3) {
+                        blood3.setAttribute('visible', 'true');
+                        blood3.setAttribute('animation', 'property: material.opacity; to: 0.9; dur: 1000');
+                        blood3.setAttribute('animation__drop', 'property: position; to: -0.2 0.05 0.12; dur: 2200; easing: easeInQuad; loop: true; delay: 300');
+                    }
+                }, 7000));
+
+                tensionTimeouts.push(setTimeout(() => {
+                    if (blood4) {
+                        blood4.setAttribute('visible', 'true');
+                        blood4.setAttribute('animation', 'property: material.opacity; to: 0.9; dur: 1000');
+                        blood4.setAttribute('animation__drop', 'property: position; to: 0.45 0.1 0.09; dur: 1800; easing: easeInQuad; loop: true');
+                    }
+                }, 8500));
+            }
+
+            // Função para o jump scare
+            function triggerJumpScare() {
+                if (isScareTriggered) return;
+                isScareTriggered = true;
+
+                const jumpScareFace = document.querySelector("#jumpScareFace");
+                const flash = document.querySelector("#flash");
+                const screamSound = document.querySelector("#screamSound");
+                const frase = document.querySelector("#frase");
+
+                // Flash branco
+                if (flash) {
+                    flash.setAttribute('visible', 'true');
+                    flash.setAttribute('animation', 'property: material.opacity; from: 0; to: 1; dur: 50');
+                    setTimeout(() => {
+                        flash.setAttribute('animation', 'property: material.opacity; to: 0; dur: 300');
+                    }, 50);
+                }
+
+                // Grito
+                if (screamSound && !screamSound.components.sound.isPlaying) {
+                    screamSound.components.sound.playSound();
+                }
+
+                // Face assustadora aparece
+                if (jumpScareFace) {
+                    jumpScareFace.setAttribute('visible', 'true');
+                    jumpScareFace.setAttribute('animation__appear', {
+                        property: 'material.opacity',
+                        from: 0,
+                        to: 1,
+                        dur: 100,
+                        easing: 'easeOutQuad'
+                    });
+                    jumpScareFace.setAttribute('animation__zoom', {
+                        property: 'scale',
+                        from: '0.1 0.1 0.1',
+                        to: '2 2 2',
+                        dur: 400,
+                        easing: 'easeOutCubic'
+                    });
+                    jumpScareFace.setAttribute('animation__position', {
+                        property: 'position',
+                        to: '0 0 0.25',
+                        dur: 400,
+                        easing: 'easeOutCubic'
+                    });
+                }
+
+                // Tremor violento no texto
+                if (frase) {
+                    frase.setAttribute('animation__shake', {
+                        property: 'position',
+                        to: '0.05 0.05 0.17',
+                        dur: 50,
+                        dir: 'alternate',
+                        loop: 8,
+                        easing: 'linear'
+                    });
+                }
+
+                // Fade out da face após 3 segundos
+                setTimeout(() => {
+                    if (jumpScareFace) {
+                        jumpScareFace.setAttribute('animation__fadeout', {
+                            property: 'material.opacity',
+                            to: 0,
+                            dur: 2000,
+                            easing: 'easeInQuad'
+                        });
+                        setTimeout(() => {
+                            jumpScareFace.setAttribute('visible', 'false');
+                        }, 2000);
+                    }
+                }, 3000);
+            }
+
+            // Limpa todos os timeouts
+            function clearAllTimeouts() {
+                tensionTimeouts.forEach(timeout => clearTimeout(timeout));
+                tensionTimeouts.forEach(interval => clearInterval(interval));
+                tensionTimeouts = [];
+                if (jumpScareTimeout) {
+                    clearTimeout(jumpScareTimeout);
+                    jumpScareTimeout = null;
+                }
+            }
+
+            // Reseta todos os elementos
+            function resetExperience() {
+                isScareTriggered = false;
+                clearAllTimeouts();
+
+                // Para todos os sons
+                const sounds = ['#som', '#whisperSound', '#heartbeatSound', '#screamSound'];
+                sounds.forEach(selector => {
+                    const sound = document.querySelector(selector);
+                    if (sound && sound.components.sound && sound.components.sound.isPlaying) {
+                        sound.components.sound.stopSound();
+                    }
+                });
+
+                // Esconde elementos do jump scare
+                const jumpScareFace = document.querySelector("#jumpScareFace");
+                const flash = document.querySelector("#flash");
+                if (jumpScareFace) jumpScareFace.setAttribute('visible', 'false');
+                if (flash) flash.setAttribute('visible', 'false');
+
+                // Esconde gotas de sangue
+                ['#blood1', '#blood2', '#blood3', '#blood4'].forEach(selector => {
+                    const blood = document.querySelector(selector);
+                    if (blood) {
+                        blood.setAttribute('visible', 'false');
+                        blood.setAttribute('material', 'opacity', 0);
+                    }
+                });
+
+                // Reseta vinheta
+                const vignette = document.querySelector("#vignette");
+                if (vignette) vignette.setAttribute('material', 'opacity', 0);
+            }
+
+            // Evento quando o target é detectado
             document.addEventListener("targetFound", () => {
                 const som = document.querySelector("#som");
                 if (som && !som.components.sound.isPlaying) {
                     som.components.sound.playSound();
                 }
+
+                // Inicia construção de tensão
+                buildTension();
+
+                // Agenda o jump scare para 10 segundos
+                jumpScareTimeout = setTimeout(() => {
+                    triggerJumpScare();
+                }, 10000);
             });
 
+            // Evento quando perde o target
             document.addEventListener("targetLost", () => {
-                const som = document.querySelector("#som");
-                if (som && som.components.sound.isPlaying) {
-                    som.components.sound.stopSound();
-                }
+                resetExperience();
             });
         </script>
     </a-scene>
